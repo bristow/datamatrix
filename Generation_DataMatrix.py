@@ -136,9 +136,6 @@ else:
 	encodage_donnees()
 	dessin_encadrement()
 	print(tab_code)
-	#for h in range(len(tab_code)):
-		#print("On gère l'octet numéro {} : {}".format(h, tab_code[h]))
-	#remplissage_selon_octet(tab_code[h])
 	remplissage_selon_octet()
 
 	
