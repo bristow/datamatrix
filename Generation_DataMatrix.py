@@ -3,7 +3,7 @@
 #
 #  generation_datamatrix.py
 #  
-#  Copyright 2015 Cédric Frayssinet <cedric.frayssinet@ac-lyon.fr>
+#  Copyright 2015 XXXX
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
