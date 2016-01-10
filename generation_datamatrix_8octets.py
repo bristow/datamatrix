@@ -156,7 +156,7 @@ try:
 	nb_octets = len(tab_code)
 	if nb_octets == 8:
 		print("Parfait, nous avons {} octets à encoder, voici le DataMatrix correspondant.".format(nb_octets))
-	else:
+	if nb_octets < 8:
 		print("Nous avons {} octets à encoder, voici le DataMatrix correspondant, il est forcément incomplet.".format(nb_octets))
 	dessin_encadrement()
 	remplissage_selon_octet()
