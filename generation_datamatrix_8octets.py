@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  generation_datamatrix_8octets.py
+#  generation_datamatrix.py
 #  
-#  Copyright 2015 
+#  Copyright 2015 Cédric Frayssinet et Frédéric Gauthier
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 '''
 ''Importation des modules nécessaires
 '''
-from PIL import Image# on travaille sur des images
+from PIL import Image							# on travaille sur des images
 import sys						
 
 
@@ -41,6 +41,7 @@ couleur_fond = 'white' 							#fond blanc
 tab_code = []									#liste de mes octets à encoder en datamatrix
 code = Image.new(couleur, (largeur, hauteur), couleur_fond)		#création d'une image qui sera mon datamatrix
 pix = code.load()								#les acces via cet objet sont plus rapide que getpixel et putpixel
+message = []
 
 
 '''
@@ -145,6 +146,50 @@ def remplissage_selon_octet():
 					else:																	#on écrit en noir (couleur 0) si bit=1
 						pix[largeur_bit+X*largeur_bit+e1,largeur_bit+Y*largeur_bit+e2] = 255#sinon on écrit en blanc
 
+
+
+def lecture_image(im):
+	img = Image.open(im)
+	tab_code_depuis_image = []
+	moitie_bit = largeur_bit / 2
+	for bit,coordonnees_octet in enumerate(placement_octet):
+		#print("Coordonnées (x, y) pour le bit n°{} : {}".format(bit,coordonnees_octet))
+		octet = ''
+		for coordonnees in coordonnees_octet:
+			X = largeur_bit + coordonnees[0]*largeur_bit + moitie_bit
+			Y = largeur_bit + coordonnees[1]*largeur_bit + moitie_bit
+			#print("Le bit {} a la coordonnée ({},{})".format(bit, X, Y))
+			pixou = img.getpixel((X, Y))
+			if pixou == 255:	#si on trouve la couleur blanche 255, on met le bit à 0 !
+				pixou = 0
+			else:
+				pixou = 1
+			octet = octet+str(pixou)
+		tab_code_depuis_image.append(octet)
+	return(tab_code_depuis_image)
+
+
+def decodage_depuis_tab_code(tab):
+	for octet in tab_code:
+		decimal = int(octet,2)
+		print("Décodage de l'octet {}, qui donne en décimal : {}".format(octet,decimal))
+		if 48 <= decimal <= 57:
+			carac = chr(decimal)
+			print("C'est un chiffre seul : {}".format(carac))
+		if decimal > 130:
+			carac = str(decimal - 130)
+			print("C'est une doublette de chiffres : {}".format(carac))
+		if decimal == 130:
+			print("C'est un double zéro")
+			carac = '00'
+		if 32 <= decimal <= 47 or 58 <= decimal < 130:
+			carac = chr(decimal)
+			print("C'est un caractère alpha : {}".format(carac))
+		message.append(carac)
+
+	message_encode = "".join(message)
+	return(message_encode)
+
 '''
 ''PROGRAMME PRINCIPAL
 '''
@@ -155,18 +200,31 @@ try:
 	encodage_donnees()
 	nb_octets = len(tab_code)
 	if nb_octets == 8:
-		print("Parfait, nous avons {} octets à encoder, voici le DataMatrix correspondant.".format(nb_octets))
+		print("Parfait, nous avons {} octets à encoder, voici le DataMatrix qui s'affiche.".format(nb_octets))
 	if nb_octets < 8:
 		print("Nous avons {} octets à encoder, voici le DataMatrix correspondant, il est forcément incomplet.".format(nb_octets))
 	dessin_encadrement()
 	remplissage_selon_octet()
+	print(tab_code)
 	#Affichage de l'image dans une fenêtre
 	code.show()
 	#Sauvegarde de l'image au format PNG
-	code.save('DataMatrix_{}x{}_{}pix.png'.format(largeur, hauteur, largeur_bit))
+	code.save('DataMatrix_{}x{}_{}pix_{}.png'.format(largeur, hauteur, largeur_bit, data))
+	#confirmation de la bonne sauvegarde
+	print("Le DataMatrix est sauvegardé sous le nom : DataMatrix_{}x{}_{}pix_{}.png.".format(largeur, hauteur, largeur_bit, data))
+	
+	#on vérifie l'image pour décoder la chaine de départ
+	#on envoie le fichier image généré dans la fonction lecture_image()
+	#puis on lance le décodage avec la fonction decodage_depuis_tab_code()
+	#on stocke le return dans message_encode pour l'afficher juste après
+	message_encode = decodage_depuis_tab_code(lecture_image('DataMatrix_{}x{}_{}pix_{}.png'.format(largeur, hauteur, largeur_bit, data)))	#tab_code renvoyé par la fonction lecture_image
+	
+	print("Voici la chaîne de caractères encodées dans ce DataMatrix : {}".format(message_encode))
+
 except IndexError:
 	#if nb_octets > 8:
 	print("L'encodage dépasse 8 octets, merci de réduire les données à encoder !")
 	sys.exit()
 	
+
 
